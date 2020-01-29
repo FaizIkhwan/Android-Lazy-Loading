@@ -14,7 +14,7 @@
         android:padding="10dp">
 
         <TextView
-            android:id="@+id/tv_email"
+            android:id="@+id/tv_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@android:color/black"
@@ -22,10 +22,10 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/tv_phone"
+            android:id="@+id/tv_length"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/tv_email"
+            android:layout_below="@id/tv_name"
             android:textColor="@android:color/black"
             android:textSize="12sp" />
 

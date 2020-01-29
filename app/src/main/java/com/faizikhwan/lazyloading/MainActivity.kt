@@ -2,79 +2,65 @@ package com.faizikhwan.lazyloading
 
 import android.os.Bundle
 import android.os.Handler
-import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.faizikhwan.lazyloading.model.Contact
+import com.faizikhwan.lazyloading.model.Item
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 import kotlin.collections.ArrayList
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), OnLoadMore {
 
-    private var contacts: ArrayList<Contact?> = ArrayList()
-    private lateinit var contactAdapter: ContactAdapter
-    private var random: Random = Random()
+    var items: MutableList<Item?> = ArrayList()
+    lateinit var adapter: ItemAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        for (i in 0..500) {
-            contacts.add(Contact(phoneNumberGenerating(), "email$i@gmail.com"))
-        }
-
+        InitRandomData()
         setupRecyclerView()
     }
 
-    private fun setupRecyclerView() {
-        val linearLayoutManager = LinearLayoutManager(this)
+    override fun onLoadMore() {
+        if (items.size < 50) {
+            items.add(null)
+            adapter.notifyItemInserted(items.size - 1)
 
-        recycler_view.apply {
-            layoutManager = linearLayoutManager
-            contactAdapter = ContactAdapter(contacts)
-            adapter = contactAdapter
-        }
+            Handler().postDelayed({
+                items.removeAt(items.size - 1)
+                adapter.notifyItemRemoved(items.size)
 
-        contactAdapter.setOnLoadMoreListener(object: ContactAdapter.OnLoadMoreInterface {
-            override fun onLoadMore() {
-                if (contacts.size <= 20) {
-                    contacts.add(null)
-                    contactAdapter.notifyItemInserted(contacts.size - 1)
-                    Handler().postDelayed({
-                        contacts.removeAt(contacts.size - 1)
-                        contactAdapter.notifyItemRemoved(contacts.size)
-                        //Generating more data
-                        val index: Int = contacts.size
-                        val end = index + 10
-                        for (i in index until end) {
-                            contacts.add(Contact(phoneNumberGenerating(), "email$i@gmail.com"))
-                        }
-                        contactAdapter.notifyDataSetChanged()
-                        contactAdapter.setLoaded()
-                    }, 5000)
-                } else {
-                    Toast.makeText(this@MainActivity, "Loading data completed", Toast.LENGTH_SHORT)
-                        .show()
+                val index = items.size
+                val end = index + 10
+
+                for (i in index until end) {
+                    val name = UUID.randomUUID().toString()
+                    val item = Item(name, name.length)
+                    items.add(item)
                 }
-            }
-        })
 
-        recycler_view.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                contactAdapter.isScrolling(linearLayoutManager.findFirstVisibleItemPosition())
-            }
-        })
+                adapter.notifyDataSetChanged()
+                adapter.setLoaded()
+            }, 3000)
+        } else {
+            Toast.makeText(this, "MAX DATA IS 50", Toast.LENGTH_SHORT).show()
+        }
     }
 
-    private fun phoneNumberGenerating(): String {
-        val low = 100000000
-        val high = 999999999
-        val randomNumber = random.nextInt(high - low) + low
-        return "0$randomNumber"
+    fun InitRandomData() {
+        for (i in 0..9) {
+            val name = UUID.randomUUID().toString()
+            val item = Item(name, name.length)
+            items.add(item)
+        }
+    }
+
+    fun setupRecyclerView() {
+        recycler_view.layoutManager = LinearLayoutManager(this)
+        adapter = ItemAdapter(recycler_view, this, items)
+        recycler_view.adapter = adapter
+        adapter.setLoadMore(this)
     }
 }
